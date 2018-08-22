@@ -52,10 +52,26 @@ class Refund extends Base
         $pub_params['biz_content'] = json_encode($api_params,JSON_UNESCAPED_UNICODE);
         $pub_data = $this->setRsa2Sign($pub_params);
        
-       $json_data = $this->curlRequest(self::NEW_PAYGATEWAY,$pub_data);
+        $json_data = $this->curlRequest(self::NEW_PAYGATEWAY,$pub_data);
+	
+	//这里有个坑，返回的json有带中文，所以转成数组是为null，需要转为utf8才行
+	$resData = json_decode($this->utf8ize($json_data),true);
         echo '<pre>'; 
         print_r(json_decode($json_data,true));
     }
+	
+	
+	//转为utf8格式
+	function utf8ize($mixed) {
+		if (is_array($mixed)) {
+		    foreach ($mixed as $key => $value) {
+			$mixed[$key] = utf8ize($value);
+		    }
+		} elseif (is_string($mixed)) {
+		    return mb_convert_encoding($mixed, "UTF-8", "UTF-8");
+		}
+		return $mixed;
+	}
     /**
     使用curl方式实现get或post请求
     @param $url 请求的url地址
